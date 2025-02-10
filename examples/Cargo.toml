@@ -14,7 +14,9 @@ members = [
     "native-fungible",
     "non-fungible",
     "social",
-    "proof-verifier"
+    "proof-verifier",
+    "microchain",
+    "mwe",
 ]
 
 [workspace.dependencies]
@@ -59,3 +61,7 @@ strip = 'debuginfo'
 
 [profile.bench]
 debug = true
+
+[patch.crates-io.p3-poseidon2]
+git = "https://github.com/lurk-lab/p3.git"
+branch = "poseidon2-patch"

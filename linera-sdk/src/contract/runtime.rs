@@ -323,6 +323,27 @@ where
     pub fn verify_proof(&mut self, verifying_key: &[u8], hash: DataBlobHash) -> bool {
         wit::verify_proof(verifying_key, hash.0.into())
     }
+
+    /// Start a microchain.
+    pub fn microchain_start(&mut self, chain_state: Vec<u8>) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
+        wit::microchain_start(&chain_state)
+    }
+
+    /// Prove a microchain transition.
+    pub fn microchain_transition(
+        &mut self,
+        chain_proof_hash: DataBlobHash,
+        chain_proofs: Vec<u8>,
+        chain_state: Vec<u8>,
+        zstore_view: Vec<u8>,
+    ) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
+        wit::microchain_transition(
+            chain_proof_hash.0.into(),
+            &chain_proofs,
+            &chain_state,
+            &zstore_view,
+        )
+    }
 }
 
 /// A helper type that uses the builder pattern to configure how a message is sent, and then

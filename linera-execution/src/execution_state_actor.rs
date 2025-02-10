@@ -17,6 +17,7 @@ use linera_base::{
     ownership::ChainOwnership,
 };
 use linera_views::{batch::Batch, context::Context, views::View};
+use linera_witty::{WitLoad, WitStore, WitType};
 use oneshot::Sender;
 #[cfg(with_metrics)]
 use prometheus::HistogramVec;
@@ -352,6 +353,23 @@ where
                     .await?;
                 callback.respond(is_correct);
             }
+
+            MicrochainStart {
+                chain_state,
+                callback,
+            } => callback.respond(self.system.microchain_start(chain_state).await?),
+
+            MicrochainTransition {
+                chain_proof_id,
+                chain_proofs,
+                chain_state,
+                zstore_view,
+                callback,
+            } => callback.respond(
+                self.system
+                    .microchain_transition(chain_proof_id, chain_proofs, chain_state, zstore_view)
+                    .await?,
+            ),
         }
 
         Ok(())
@@ -539,5 +557,20 @@ pub enum ExecutionRequest {
         proof_blob_id: BlobId,
         #[debug(skip)]
         callback: Sender<bool>,
+    },
+
+    MicrochainStart {
+        chain_state: Vec<u8>,
+        #[debug(skip)]
+        callback: Sender<(Vec<u8>, Vec<u8>, Vec<u8>)>,
+    },
+
+    MicrochainTransition {
+        chain_proof_id: BlobId,
+        chain_proofs: Vec<u8>,
+        chain_state: Vec<u8>,
+        zstore_view: Vec<u8>,
+        #[debug(skip)]
+        callback: Sender<(Vec<u8>, Vec<u8>, Vec<u8>)>,
     },
 }

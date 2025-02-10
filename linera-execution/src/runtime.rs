@@ -724,6 +724,24 @@ impl<UserInstance> BaseRuntime for SyncRuntimeHandle<UserInstance> {
     ) -> Result<bool, ExecutionError> {
         self.inner().verify_proof(vk, proof_hash)
     }
+
+    fn microchain_start(
+        &mut self,
+        chain_state: Vec<u8>,
+    ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), ExecutionError> {
+        self.inner().microchain_start(chain_state)
+    }
+
+    fn microchain_transition(
+        &mut self,
+        chain_proof_hash: CryptoHash,
+        chain_proofs: Vec<u8>,
+        chain_state: Vec<u8>,
+        zstore_view: Vec<u8>,
+    ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), ExecutionError> {
+        self.inner()
+            .microchain_transition(chain_proof_hash, chain_proofs, chain_state, zstore_view)
+    }
 }
 
 impl<UserInstance> BaseRuntime for SyncRuntimeInternal<UserInstance> {
@@ -1074,6 +1092,39 @@ impl<UserInstance> BaseRuntime for SyncRuntimeInternal<UserInstance> {
             })?
             .recv_response()?;
         Ok(is_correct)
+    }
+
+    fn microchain_start(
+        &mut self,
+        chain_state: Vec<u8>,
+    ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), ExecutionError> {
+        self.execution_state_sender
+            .send_request(|callback| ExecutionRequest::MicrochainStart {
+                chain_state,
+                callback,
+            })?
+            .recv_response()
+    }
+
+    fn microchain_transition(
+        &mut self,
+        chain_proof_hash: CryptoHash,
+        chain_proofs: Vec<u8>,
+        chain_state: Vec<u8>,
+        zstore_view: Vec<u8>,
+    ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), ExecutionError> {
+        let chain_proof_id = BlobId::new(chain_proof_hash, BlobType::Data);
+        self.transaction_tracker
+            .replay_oracle_response(OracleResponse::Blob(chain_proof_id))?;
+        self.execution_state_sender
+            .send_request(|callback| ExecutionRequest::MicrochainTransition {
+                chain_proof_id,
+                chain_proofs,
+                chain_state,
+                zstore_view,
+                callback,
+            })?
+            .recv_response()
     }
 }
 

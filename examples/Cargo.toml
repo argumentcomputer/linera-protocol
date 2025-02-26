@@ -16,6 +16,7 @@ members = [
     "social",
     "proof-verifier",
     "microchain",
+    "lurk-microchain",
     "mwe",
 ]
 
